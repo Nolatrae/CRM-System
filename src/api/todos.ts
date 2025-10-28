@@ -28,7 +28,7 @@ async function http<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
 
 export function getTodos(filter: TodoFilter) {
 	const url = `${BASE_URL}/todos?filter=${filter}`
-	return http<MetaResponse<Todo, TodoInfo>>(url, { cache: 'no-store' })
+	return http<MetaResponse<Todo, TodoInfo>>(url)
 }
 
 export function createTodo(req: TodoRequest) {
