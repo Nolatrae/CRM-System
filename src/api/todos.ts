@@ -1,50 +1,30 @@
+import axios from 'axios'
 import type { MetaResponse, Todo, TodoFilter, TodoRequest, TodoInfo } from '../types/todo'
 
 const BASE_URL = 'https://easydev.club/api/v1'
 
-async function http<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-	const res = await fetch(input, {
-		headers: { 'Content-Type': 'application/json' },
-		...init,
+const api = axios.create({
+	baseURL: BASE_URL,
+	headers: { 'Content-Type': 'application/json' },
+})
+
+export async function getTodos(filter: TodoFilter) {
+	const { data } = await api.get<MetaResponse<Todo, TodoInfo>>('/todos', {
+		params: { filter }
 	})
-
-	if (!res.ok) {
-		const msg = await res.text().catch(() => '')
-		throw new Error(`HTTP ${res.status}: ${msg || res.statusText}`)
-	}
-
-	if (res.status === 204) {
-		return undefined as T
-	}
-
-	const ct = res.headers.get('content-type') || ''
-	if (!ct.includes('application/json')) {
-		return undefined as T
-	}
-
-	return res.json() as Promise<T>
+	return data
 }
 
-
-export function getTodos(filter: TodoFilter) {
-	const url = `${BASE_URL}/todos?filter=${filter}`
-	return http<MetaResponse<Todo, TodoInfo>>(url, { cache: 'no-store' })
+export async function createTodo(req: TodoRequest) {
+	const { data } = await api.post<Todo>('/todos', req)
+	return data
 }
 
-export function createTodo(req: TodoRequest) {
-	return http<Todo>(`${BASE_URL}/todos`, {
-		method: 'POST',
-		body: JSON.stringify(req),
-	})
-}
-
-export function updateTodo(id: number, req: TodoRequest) {
-	return http<Todo>(`${BASE_URL}/todos/${id}`, {
-		method: 'PUT',
-		body: JSON.stringify(req),
-	})
+export async function updateTodo(id: number, req: TodoRequest) {
+	const { data } = await api.put<Todo>(`/todos/${id}`, req)
+	return data
 }
 
 export async function deleteTodo(id: number): Promise<void> {
-	await http<undefined>(`${BASE_URL}/todos/${id}`, { method: 'DELETE' })
+	await api.delete(`/todos/${id}`)
 }

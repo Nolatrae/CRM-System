@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createTodo, deleteTodo, getTodos, updateTodo } from '../../api/todos'
 import type { Todo, TodoFilter, TodoInfo } from '../../types/todo'
 import TodoHeader from '../../components/todo/TodoHeader/TodoHeader'
 import TodoFilters from '../../components/todo/TodoFilters/TodoFilters'
 import TodoList from '../../components/todo/TodoList/TodoList'
 import styles from './styles.module.scss'
+import { Alert, Spin } from 'antd'
 
 export default function TodoPage() {
 	const [filter, setFilter] = useState<TodoFilter>('all')
@@ -12,8 +13,9 @@ export default function TodoPage() {
 	const [counts, setCounts] = useState<TodoInfo | null>(null)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
+	const [editingIds, setEditingIds] = useState<Set<number>>(new Set())
 
-	async function load(filter: TodoFilter) {
+	const load = useCallback(async (filter: TodoFilter) => {
 		try {
 			setLoading(true)
 			setError(null)
@@ -25,11 +27,33 @@ export default function TodoPage() {
 		} finally {
 			setLoading(false)
 		}
-	}
+	}, [])
+
 
 	useEffect(() => {
 		load(filter)
-	}, [filter])
+	}, [filter, load])
+
+	useEffect(() => {
+		if (editingIds.size > 0) {
+			return
+		}
+		const id = setInterval(() => load(filter), 5000)
+		return () => clearInterval(id)
+	}, [filter, load, editingIds])
+
+	const handleEditingChange = (id: number, editing: boolean) => {
+		setEditingIds(prev => {
+			const next = new Set(prev)
+			if (editing) {
+				next.add(id)
+			}
+			else {
+				next.delete(id)
+			}
+			return next
+		})
+	}
 
 	const handleAdd = async (title: string) => {
 		await createTodo({ title })
@@ -51,6 +75,11 @@ export default function TodoPage() {
 		await load(filter)
 	}
 
+	const onChangeFilter = (filter: TodoFilter) => {
+		setFilter(filter)
+		setEditingIds(new Set())
+	}
+
 	return (
 		<section className={styles.todo}>
 			<TodoHeader
@@ -60,11 +89,20 @@ export default function TodoPage() {
 			<TodoFilters
 				active={filter}
 				counts={counts}
-				onChange={setFilter}
+				onChange={onChangeFilter}
 			/>
 
-			{loading && <div className={styles.note}>Загрузка…</div>}
-			{error && <div className={`${styles.note} ${styles.noteError}`}>{error}</div>}
+			{loading && (
+				<div className={styles.loader}>
+					<Spin />
+				</div>
+			)}
+
+			{error && (
+				<div className={styles.alert}>
+					<Alert type="error" message={error} showIcon />
+				</div>
+			)}
 
 			{!loading && !error && (
 				<TodoList
@@ -72,6 +110,7 @@ export default function TodoPage() {
 					onToggle={handleToggle}
 					onDelete={handleDelete}
 					onSaveTitle={handleSaveTitle}
+					onEditingChange={handleEditingChange}
 				/>
 			)}
 		</section>

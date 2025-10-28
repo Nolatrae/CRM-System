@@ -1,5 +1,5 @@
+import { List, Empty } from 'antd'
 import type { Todo } from '../../../types/todo'
-import styles from './styles.module.scss'
 import TodoRow from '../TodoRow/TodoRow'
 
 type Props = {
@@ -7,24 +7,26 @@ type Props = {
 	onToggle: (id: number, isDone: boolean) => Promise<void>
 	onDelete: (id: number) => Promise<void>
 	onSaveTitle: (id: number, title: string) => Promise<void>
+	onEditingChange: (id: number, editing: boolean) => void
 }
 
-export default function TodoList({ items, onToggle, onDelete, onSaveTitle }: Props) {
+export default function TodoList({ items, onToggle, onDelete, onSaveTitle, onEditingChange }: Props) {
 	if (!items.length) {
-		return <div className={styles.empty}>Список пуст</div>
+		return <Empty description="Список пуст" />
 	}
 	return (
-		<ul className={styles.list}>
-			{items.map((t) => (
-				<li key={t.id} className={styles.item}>
+		<List
+			dataSource={items}
+			renderItem={(t) => (
+				<List.Item>
 					<TodoRow
 						todo={t}
 						onToggle={onToggle}
 						onDelete={onDelete}
 						onSaveTitle={onSaveTitle}
-					/>
-				</li>
-			))}
-		</ul>
+						onEditingChange={onEditingChange} />
+				</List.Item>
+			)}
+		/>
 	)
 }

@@ -1,46 +1,51 @@
 import { useState } from 'react'
+import { Checkbox, Button, Form, Input, Space, Typography } from 'antd'
 import type { Todo } from '../../../types/todo'
-import styles from './styles.module.scss'
 
 type Props = {
 	todo: Todo
 	onToggle: (id: number, isDone: boolean) => Promise<void>
 	onDelete: (id: number) => Promise<void>
 	onSaveTitle: (id: number, title: string) => Promise<void>
+	onEditingChange: (id: number, editing: boolean) => void
 }
 
-export default function TodoRow({ todo, onToggle, onDelete, onSaveTitle }: Props) {
+export default function TodoRow({ todo, onToggle, onDelete, onSaveTitle, onEditingChange }: Props) {
 	const [editing, setEditing] = useState(false)
-	const [value, setValue] = useState(todo.title)
 	const [saving, setSaving] = useState(false)
 	const [deleting, setDeleting] = useState(false)
 	const [toggling, setToggling] = useState(false)
+	const [form] = Form.useForm()
 
 	const busy = saving || deleting || toggling
+
+	const save = async () => {
+		try {
+			const { title } = await form.validateFields()
+			setSaving(true)
+			await onSaveTitle(todo.id, title.trim())
+			setEditing(false)
+		} finally {
+			setSaving(false)
+			onEditingChange(todo.id, false)
+		}
+	}
+
+	const startEdit = () => {
+		if (busy) {
+			return
+		}
+		setEditing(true)
+		onEditingChange(todo.id, true)
+	}
 
 	const cancel = () => {
 		if (busy) {
 			return
 		}
-		setValue(todo.title)
 		setEditing(false)
-	}
-
-	const save = async () => {
-		if (busy) {
-			return
-		}
-		const v = value.trim()
-		if (v.length < 2 || v.length > 64) {
-			return
-		}
-		try {
-			setSaving(true)
-			await onSaveTitle(todo.id, v)
-			setEditing(false)
-		} finally {
-			setSaving(false)
-		}
+		form.setFieldsValue({ title: todo.title })
+		onEditingChange(todo.id, false)
 	}
 
 	const toggle = async (checked: boolean) => {
@@ -68,63 +73,49 @@ export default function TodoRow({ todo, onToggle, onDelete, onSaveTitle }: Props
 	}
 
 	return (
-		<div className={`${styles.row} ${busy ? styles.rowBusy : ''}`}>
-			<label>
-				<input
-					type="checkbox"
+		<Space style={{ width: '100%', justifyContent: 'space-between' }}>
+			<Space>
+				<Checkbox
 					checked={todo.isDone}
 					onChange={(e) => toggle(e.target.checked)}
 					disabled={busy}
 				/>
-			</label>
-
-			<div>
 				{editing ? (
-					<input
-						className={styles.input}
-						value={value}
-						onChange={(e) => setValue(e.target.value)}
-						maxLength={64}
-						autoFocus
-						disabled={busy}
-					/>
+					<Form form={form} initialValues={{ title: todo.title }}>
+						<Form.Item
+							name="title"
+							rules={[
+								{ required: true, message: 'Это поле не может быть пустым' },
+								{ min: 2, message: 'Минимум 2 символа' },
+								{ max: 64, message: 'Максимум 64 символа' },
+							]}
+							style={{ marginBottom: 0, minWidth: 260 }}
+						>
+							<Input maxLength={64} disabled={busy} />
+						</Form.Item>
+					</Form>
 				) : (
-					<span className={todo.isDone ? styles.titleDone : ''}>{todo.title}</span>
+					<Typography.Text delete={todo.isDone}>{todo.title}</Typography.Text>
 				)}
-			</div>
+			</Space>
 
-			<div className={styles.actions}>
+			<Space>
 				{editing ? (
 					<>
-						<button
-							className={`${styles.btn} ${styles.btnPrimary}`}
-							disabled={busy}
-							onClick={save}
-						>
+						<Button type="primary" onClick={save} loading={saving} disabled={busy}>
 							Сохранить
-						</button>
-						<button className={styles.btn} disabled={busy} onClick={cancel}>
-							Отмена
-						</button>
+						</Button>
+						<Button onClick={cancel} disabled={busy}>Отмена</Button>
 					</>
 				) : (
-					<button
-						className={`${styles.btn} ${styles.btnPrimary}`}
-						disabled={busy}
-						onClick={() => setEditing(true)}
-					>
+					<Button type="primary" onClick={startEdit} disabled={busy}>
 						Редактировать
-					</button>
+					</Button>
 				)}
-				<button
-					className={`${styles.btn} ${styles.btnDanger}`}
-					disabled={busy}
-					aria-busy={deleting}
-					onClick={remove}
-				>
+				<Button danger onClick={remove} loading={deleting} disabled={busy}>
 					Удалить
-				</button>
-			</div>
-		</div>
+				</Button>
+			</Space>
+		</Space>
 	)
 }

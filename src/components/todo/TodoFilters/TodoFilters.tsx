@@ -1,5 +1,5 @@
+import { Badge, Tabs } from 'antd'
 import type { TodoFilter, TodoInfo } from '../../../types/todo'
-import styles from './styles.module.scss'
 
 type Props = {
 	active: TodoFilter
@@ -10,25 +10,18 @@ type Props = {
 export default function TodoFilters({ active, counts, onChange }: Props) {
 	const c = counts ?? { all: 0, inWork: 0, completed: 0 }
 
-	const Tab = ({
-		k,
-		label,
-		count,
-	}: { k: TodoFilter; label: string; count: number }) => (
-		<button
-			onClick={() => onChange(k)}
-			className={`${styles.tab} ${active === k ? styles.tabActive : ''}`}
-			type="button"
-		>
-			{label} <span className={styles.tabCount}>({count})</span>
-		</button>
-	)
+	const items = [
+		{ key: 'all', label: <>Все <Badge count={c.all} showZero /></> },
+		{ key: 'inWork', label: <>В работе <Badge count={c.inWork} showZero /></> },
+		{ key: 'completed', label: <>Сделано <Badge count={c.completed} showZero /></> },
+	]
 
 	return (
-		<div className={styles.filters}>
-			<Tab k="all" label="Все" count={c.all} />
-			<Tab k="inWork" label="В работе" count={c.inWork} />
-			<Tab k="completed" label="Сделано" count={c.completed} />
-		</div>
+		<Tabs
+			activeKey={active}
+			items={items}
+			onChange={(k) => onChange(k as TodoFilter)}
+			style={{ marginBottom: 16 }}
+		/>
 	)
 }

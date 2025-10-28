@@ -1,16 +1,30 @@
-import { Link, Outlet } from "react-router-dom"
+import { Layout, Menu } from 'antd'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+
+const { Sider, Content } = Layout
 
 export default function AppLayout() {
+	const { pathname } = useLocation()
+
 	return (
-		<div className="app">
-			<header style={{ padding: 16, borderBottom: "1px solid #eee" }}>
-				<nav style={{ display: "flex", gap: 12 }}>
-					<Link to="/">Главная</Link>
-				</nav>
-			</header>
-			<main style={{ padding: 16 }}>
-				<Outlet />
-			</main>
-		</div>
+		<Layout style={{ minHeight: '100vh' }}>
+			<Sider>
+				<div style={{ color: '#fff', padding: 16, fontWeight: 600 }}>CRM System</div>
+				<Menu
+					theme="dark"
+					mode="inline"
+					selectedKeys={[pathname]}
+					items={[
+						{ key: '/', label: <Link to="/">Список задач</Link> },
+						{ key: '/profile', label: <Link to="/profile">Профиль</Link> },
+					]}
+				/>
+			</Sider>
+			<Layout>
+				<Content style={{ padding: 16 }}>
+					<Outlet />
+				</Content>
+			</Layout>
+		</Layout>
 	)
 }

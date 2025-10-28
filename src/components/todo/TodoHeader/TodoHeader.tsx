@@ -1,68 +1,49 @@
 import { useState } from 'react'
-import styles from './styles.module.scss'
+import { Form, Input, Button, message } from 'antd'
 
-type Props = {
-	onAdd: (title: string) => Promise<void>
-}
+type Props = { onAdd: (title: string) => Promise<void> }
 
 export default function TodoHeader({ onAdd }: Props) {
-	const [title, setTitle] = useState('')
-	const [msg, setMsg] = useState<string | null>(null)
-	const [err, setErr] = useState<string | null>(null)
+	const [form] = Form.useForm()
 	const [loading, setLoading] = useState(false)
 
-	function validate(value: string) {
-		const v = value.trim()
-		if (!v) {
-			return 'Это поле не может быть пустым'
-		}
-		if (v.length < 2) {
-			return 'Минимальная длина текста 2 символа'
-		}
-		if (v.length > 64) {
-			return 'Максимальная длина текста 64 символа'
-		}
-		return null
-	}
-
-	async function handleAdd() {
-		setMsg(null)
-		const vErr = validate(title)
-		if (vErr) {
-			setErr(vErr)
-			return
-		}
+	const onFinish = async (values: { title: string }) => {
 		try {
 			setLoading(true)
-			await onAdd(title.trim())
-			setTitle('')
-			setErr(null)
-			setMsg('Задача успешно создана')
-			setTimeout(() => setMsg(null), 1500)
+			await onAdd(values.title.trim())
+			form.resetFields()
+			message.success('Задача успешно создана')
 		} catch (e: any) {
-			setErr(e.message || 'Не удалось создать задачу')
+			message.error(e?.message || 'Не удалось создать задачу')
 		} finally {
 			setLoading(false)
 		}
 	}
 
 	return (
-		<div className={styles.wrapper}>
-			<div className={styles.controls}>
-				<input
-					className={styles.input}
-					placeholder="Введите задачу"
-					value={title}
-					onChange={(e) => setTitle(e.target.value)}
-				/>
-				<button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleAdd} disabled={loading}>
-					Add
-				</button>
-			</div>
-			<div className={styles.messages}>
-				{err && <div className={`${styles.note} ${styles.noteError}`}>{err}</div>}
-				{msg && <div className={`${styles.note} ${styles.noteSuccess}`}>{msg}</div>}
-			</div>
-		</div>
+		<Form
+			form={form}
+			layout="inline"
+			onFinish={onFinish}
+			style={{ marginBottom: 16, gap: 12, flexWrap: 'wrap' }}
+		>
+			<Form.Item
+				name="title"
+				rules={[
+					{ required: true, message: 'Это поле не может быть пустым' },
+					{ min: 2, message: 'Минимальная длина текста 2 символа' },
+					{ max: 64, message: 'Максимальная длина текста 64 символа' },
+				]}
+				style={{ flex: 1, minWidth: 260 }}
+			>
+				<Input placeholder="Введите задачу" />
+			</Form.Item>
+
+			<Form.Item>
+				<Button type="primary" htmlType="submit" loading={loading}>
+					Добавить
+				</Button>
+			</Form.Item>
+		</Form>
 	)
 }

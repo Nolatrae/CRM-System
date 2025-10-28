@@ -14,3 +14,13 @@
 .noteSuccess { 
 	color: #2e7d32; 
 }
+
+.loader {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.alert {
+  margin: 8px 0 16px;
+}
