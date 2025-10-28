@@ -1,0 +1,58 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;            
+  margin-bottom: 16px;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    filter: grayscale(0.1);
+  }
+}
+
+.btnPrimary {
+  background: #4f77ff;
+  color: #fff;
+  border-color: #4f77ff;
+
+  &:disabled {
+    background: #8aa2ff;
+    border-color: #8aa2ff;
+  }
+}
+
+.messages {
+  min-height: 20px;
+}
+
+.note { 
+	margin-top: 0; 
+}
+.noteError { 
+	color: #c62828; 
+}
+.noteSuccess { 
+	color: #2e7d32;
+ }
