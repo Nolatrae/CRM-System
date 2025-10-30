@@ -1,46 +1,37 @@
 import { useState } from 'react'
 import styles from './styles.module.scss'
+import clsx from 'clsx'
+import { validateTitle } from '@helpers/validation'
+import { createTodo } from '@api/todos'
 
 type Props = {
-	onAdd: (title: string) => Promise<void>
+	refresh: () => Promise<void>
 }
 
-export default function TodoHeader({ onAdd }: Props) {
+export default function TodoHeader({ refresh }: Props) {
 	const [title, setTitle] = useState('')
 	const [msg, setMsg] = useState<string | null>(null)
 	const [err, setErr] = useState<string | null>(null)
 	const [loading, setLoading] = useState(false)
 
-	function validate(value: string) {
-		const v = value.trim()
-		if (!v) {
-			return 'Это поле не может быть пустым'
-		}
-		if (v.length < 2) {
-			return 'Минимальная длина текста 2 символа'
-		}
-		if (v.length > 64) {
-			return 'Максимальная длина текста 64 символа'
-		}
-		return null
-	}
-
 	async function handleAdd() {
 		setMsg(null)
-		const vErr = validate(title)
+		const vErr = validateTitle(title)
 		if (vErr) {
 			setErr(vErr)
 			return
 		}
 		try {
 			setLoading(true)
-			await onAdd(title.trim())
+			await createTodo({ title: title.trim() })
 			setTitle('')
 			setErr(null)
-			setMsg('Задача успешно создана')
+			await refresh()
 			setTimeout(() => setMsg(null), 1500)
 		} catch (e: any) {
-			setErr(e.message || 'Не удалось создать задачу')
+			const m = e?.message || 'Не удалось создать задачу'
+			setErr(m)
+			console.error(m)
 		} finally {
 			setLoading(false)
 		}
@@ -55,13 +46,19 @@ export default function TodoHeader({ onAdd }: Props) {
 					value={title}
 					onChange={(e) => setTitle(e.target.value)}
 				/>
-				<button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleAdd} disabled={loading}>
-					Add
+
+				<button
+					className={clsx(styles.btn, styles.btnPrimary)}
+					onClick={handleAdd}
+					disabled={loading}
+				>
+					Добавить
 				</button>
-			</div>
-			<div className={styles.messages}>
-				{err && <div className={`${styles.note} ${styles.noteError}`}>{err}</div>}
-				{msg && <div className={`${styles.note} ${styles.noteSuccess}`}>{msg}</div>}
+
+				<div className={styles.messages}>
+					{err && <div className={clsx(styles.note, styles.noteError)}>{err}</div>}
+					{msg && <div className={clsx(styles.note, styles.noteSuccess)}>{msg}</div>}
+				</div>
 			</div>
 		</div>
 	)

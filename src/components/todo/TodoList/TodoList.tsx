@@ -4,12 +4,10 @@ import TodoRow from '../TodoRow/TodoRow'
 
 type Props = {
 	items: Todo[]
-	onToggle: (id: number, isDone: boolean) => Promise<void>
-	onDelete: (id: number) => Promise<void>
-	onSaveTitle: (id: number, title: string) => Promise<void>
+	refresh: () => Promise<void>
 }
 
-export default function TodoList({ items, onToggle, onDelete, onSaveTitle }: Props) {
+export default function TodoList({ items, refresh }: Props) {
 	if (!items.length) {
 		return <div className={styles.empty}>Список пуст</div>
 	}
@@ -19,9 +17,7 @@ export default function TodoList({ items, onToggle, onDelete, onSaveTitle }: Pro
 				<li key={t.id} className={styles.item}>
 					<TodoRow
 						todo={t}
-						onToggle={onToggle}
-						onDelete={onDelete}
-						onSaveTitle={onSaveTitle}
+						refresh={refresh}
 					/>
 				</li>
 			))}

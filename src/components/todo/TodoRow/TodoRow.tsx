@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import type { Todo } from '../../../types/todo'
 import styles from './styles.module.scss'
+import clsx from 'clsx'
+import { validateTitle } from '@helpers/validation'
+import { deleteTodo, updateTodo } from '@api/todos'
 
 type Props = {
 	todo: Todo
-	onToggle: (id: number, isDone: boolean) => Promise<void>
-	onDelete: (id: number) => Promise<void>
-	onSaveTitle: (id: number, title: string) => Promise<void>
+	refresh: () => Promise<void>
 }
 
-export default function TodoRow({ todo, onToggle, onDelete, onSaveTitle }: Props) {
+export default function TodoRow({ todo, refresh }: Props) {
 	const [editing, setEditing] = useState(false)
 	const [value, setValue] = useState(todo.title)
 	const [saving, setSaving] = useState(false)
@@ -30,14 +31,19 @@ export default function TodoRow({ todo, onToggle, onDelete, onSaveTitle }: Props
 		if (busy) {
 			return
 		}
-		const v = value.trim()
-		if (v.length < 2 || v.length > 64) {
+		const vErr = validateTitle(value)
+		if (vErr) {
 			return
 		}
 		try {
 			setSaving(true)
-			await onSaveTitle(todo.id, v)
+			await updateTodo(todo.id, {
+				title: value.trim()
+			})
+			await refresh()
 			setEditing(false)
+		} catch (e: any) {
+			console.error(e?.message || 'Не удалось сохранить название')
 		} finally {
 			setSaving(false)
 		}
@@ -49,7 +55,10 @@ export default function TodoRow({ todo, onToggle, onDelete, onSaveTitle }: Props
 		}
 		try {
 			setToggling(true)
-			await onToggle(todo.id, checked)
+			await updateTodo(todo.id, { isDone: checked })
+			await refresh()
+		} catch (e: any) {
+			console.error(e?.message || 'Не удалось изменить статус')
 		} finally {
 			setToggling(false)
 		}
@@ -61,14 +70,17 @@ export default function TodoRow({ todo, onToggle, onDelete, onSaveTitle }: Props
 		}
 		try {
 			setDeleting(true)
-			await onDelete(todo.id)
+			await deleteTodo(todo.id)
+			await refresh()
+		} catch (e: any) {
+			console.error(e?.message || 'Не удалось удалить задачу')
 		} finally {
 			setDeleting(false)
 		}
 	}
 
 	return (
-		<div className={`${styles.row} ${busy ? styles.rowBusy : ''}`}>
+		<div className={clsx(styles.row, busy && styles.rowBusy)}>
 			<label>
 				<input
 					type="checkbox"
@@ -89,7 +101,7 @@ export default function TodoRow({ todo, onToggle, onDelete, onSaveTitle }: Props
 						disabled={busy}
 					/>
 				) : (
-					<span className={todo.isDone ? styles.titleDone : ''}>{todo.title}</span>
+					<span className={clsx(todo.isDone && styles.titleDone)}>{todo.title}</span>
 				)}
 			</div>
 
@@ -97,7 +109,7 @@ export default function TodoRow({ todo, onToggle, onDelete, onSaveTitle }: Props
 				{editing ? (
 					<>
 						<button
-							className={`${styles.btn} ${styles.btnPrimary}`}
+							className={clsx(styles.btn, styles.btnPrimary)}
 							disabled={busy}
 							onClick={save}
 						>
@@ -109,7 +121,7 @@ export default function TodoRow({ todo, onToggle, onDelete, onSaveTitle }: Props
 					</>
 				) : (
 					<button
-						className={`${styles.btn} ${styles.btnPrimary}`}
+						className={clsx(styles.btn, styles.btnPrimary)}
 						disabled={busy}
 						onClick={() => setEditing(true)}
 					>
@@ -117,9 +129,8 @@ export default function TodoRow({ todo, onToggle, onDelete, onSaveTitle }: Props
 					</button>
 				)}
 				<button
-					className={`${styles.btn} ${styles.btnDanger}`}
+					className={clsx(styles.btn, styles.btnDanger)}
 					disabled={busy}
-					aria-busy={deleting}
 					onClick={remove}
 				>
 					Удалить

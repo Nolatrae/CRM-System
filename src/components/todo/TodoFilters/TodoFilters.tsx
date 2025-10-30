@@ -1,3 +1,4 @@
+import clsx from 'clsx'
 import type { TodoFilter, TodoInfo } from '../../../types/todo'
 import styles from './styles.module.scss'
 
@@ -17,7 +18,7 @@ export default function TodoFilters({ active, counts, onChange }: Props) {
 	}: { k: TodoFilter; label: string; count: number }) => (
 		<button
 			onClick={() => onChange(k)}
-			className={`${styles.tab} ${active === k ? styles.tabActive : ''}`}
+			className={clsx(styles.tab, active === k && styles.tabActive)}
 			type="button"
 		>
 			{label} <span className={styles.tabCount}>({count})</span>
