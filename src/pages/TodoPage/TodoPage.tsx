@@ -42,7 +42,7 @@ export default function TodoPage() {
 		return () => clearInterval(id)
 	}, [filter, load, editingIds])
 
-	const handleEditingChange = (id: number, editing: boolean) => {
+	const handleEditingChange = useCallback((id: number, editing: boolean) => {
 		setEditingIds(prev => {
 			const next = new Set(prev)
 			if (editing) {
@@ -53,11 +53,11 @@ export default function TodoPage() {
 			}
 			return next
 		})
-	}
+	}, [])
 
 	const refresh = useCallback(async () => {
 		await load(filter)
-	}, [filter])
+	}, [filter, load])
 
 	const onChangeFilter = (filter: TodoFilter) => {
 		setFilter(filter)
