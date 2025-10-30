@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { createTodo, deleteTodo, getTodos, updateTodo } from '../../api/todos'
 import type { Todo, TodoFilter, TodoInfo } from '../../types/todo'
 import TodoHeader from '../../components/todo/TodoHeader/TodoHeader'
 import TodoFilters from '../../components/todo/TodoFilters/TodoFilters'
 import TodoList from '../../components/todo/TodoList/TodoList'
 import styles from './styles.module.scss'
 import { Alert, Spin } from 'antd'
+import { getTodos } from '@api/todos'
 
 export default function TodoPage() {
 	const [filter, setFilter] = useState<TodoFilter>('all')
@@ -23,7 +23,7 @@ export default function TodoPage() {
 			setItems(resp.data)
 			setCounts(resp.info ?? null)
 		} catch (e: any) {
-			setError(e.message || 'Ошибка загрузки')
+			setError(e?.message || 'Ошибка загрузки')
 		} finally {
 			setLoading(false)
 		}
@@ -55,25 +55,9 @@ export default function TodoPage() {
 		})
 	}
 
-	const handleAdd = async (title: string) => {
-		await createTodo({ title })
+	const refresh = useCallback(async () => {
 		await load(filter)
-	}
-
-	const handleToggle = async (id: number, isDone: boolean) => {
-		await updateTodo(id, { isDone })
-		await load(filter)
-	}
-
-	const handleDelete = async (id: number) => {
-		await deleteTodo(id)
-		await load(filter)
-	}
-
-	const handleSaveTitle = async (id: number, title: string) => {
-		await updateTodo(id, { title })
-		await load(filter)
-	}
+	}, [filter])
 
 	const onChangeFilter = (filter: TodoFilter) => {
 		setFilter(filter)
@@ -83,7 +67,7 @@ export default function TodoPage() {
 	return (
 		<section className={styles.todo}>
 			<TodoHeader
-				onAdd={handleAdd}
+				refresh={refresh}
 			/>
 
 			<TodoFilters
@@ -104,13 +88,11 @@ export default function TodoPage() {
 				</div>
 			)}
 
-			{!loading && !error && (
+			{!loading && (
 				<TodoList
 					items={items}
-					onToggle={handleToggle}
-					onDelete={handleDelete}
-					onSaveTitle={handleSaveTitle}
 					onEditingChange={handleEditingChange}
+					refresh={refresh}
 				/>
 			)}
 		</section>

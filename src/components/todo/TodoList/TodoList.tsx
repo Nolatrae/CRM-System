@@ -4,27 +4,25 @@ import TodoRow from '../TodoRow/TodoRow'
 
 type Props = {
 	items: Todo[]
-	onToggle: (id: number, isDone: boolean) => Promise<void>
-	onDelete: (id: number) => Promise<void>
-	onSaveTitle: (id: number, title: string) => Promise<void>
 	onEditingChange: (id: number, editing: boolean) => void
+	refresh: () => Promise<void>
 }
 
-export default function TodoList({ items, onToggle, onDelete, onSaveTitle, onEditingChange }: Props) {
+export default function TodoList({ items, refresh, onEditingChange }: Props) {
 	if (!items.length) {
 		return <Empty description="Список пуст" />
 	}
+
 	return (
 		<List
 			dataSource={items}
-			renderItem={(t) => (
+			renderItem={(t: Todo) => (
 				<List.Item>
 					<TodoRow
 						todo={t}
-						onToggle={onToggle}
-						onDelete={onDelete}
-						onSaveTitle={onSaveTitle}
-						onEditingChange={onEditingChange} />
+						onEditingChange={onEditingChange}
+						refresh={refresh}
+					/>
 				</List.Item>
 			)}
 		/>

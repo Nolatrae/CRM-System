@@ -1,18 +1,30 @@
 import { useState } from 'react'
 import { Form, Input, Button, message } from 'antd'
+import { createTodo } from '@api/todos'
 
-type Props = { onAdd: (title: string) => Promise<void> }
+type Props = {
+	refresh: () => Promise<void>
+}
 
-export default function TodoHeader({ onAdd }: Props) {
+export default function TodoHeader({ refresh }: Props) {
 	const [form] = Form.useForm()
 	const [loading, setLoading] = useState(false)
 
 	const onFinish = async (values: { title: string }) => {
+		const rawTitle = values.title ?? ''
+		const title = rawTitle.trim()
+
+		if (!title) {
+			message.error('Это поле не может быть пустым')
+			return
+		}
+
 		try {
 			setLoading(true)
-			await onAdd(values.title.trim())
+			await createTodo({ title })
 			form.resetFields()
 			message.success('Задача успешно создана')
+			await refresh()
 		} catch (e: any) {
 			message.error(e?.message || 'Не удалось создать задачу')
 		} finally {
@@ -36,11 +48,18 @@ export default function TodoHeader({ onAdd }: Props) {
 				]}
 				style={{ flex: 1, minWidth: 260 }}
 			>
-				<Input placeholder="Введите задачу" />
+				<Input
+					placeholder="Введите задачу"
+					disabled={loading}
+				/>
 			</Form.Item>
 
 			<Form.Item>
-				<Button type="primary" htmlType="submit" loading={loading}>
+				<Button
+					type="primary"
+					htmlType="submit"
+					loading={loading}
+				>
 					Добавить
 				</Button>
 			</Form.Item>
