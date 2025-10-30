@@ -7,6 +7,8 @@ import styles from './styles.module.scss'
 import { Alert, Spin } from 'antd'
 import { getTodos } from '@api/todos'
 
+const REFRESH_INTERVAL_MS = 5_000
+
 export default function TodoPage() {
 	const [filter, setFilter] = useState<TodoFilter>('all')
 	const [items, setItems] = useState<Todo[]>([])
@@ -38,7 +40,7 @@ export default function TodoPage() {
 		if (editingIds.size > 0) {
 			return
 		}
-		const id = setInterval(() => load(filter), 5000)
+		const id = setInterval(() => load(filter), REFRESH_INTERVAL_MS)
 		return () => clearInterval(id)
 	}, [filter, load, editingIds])
 
